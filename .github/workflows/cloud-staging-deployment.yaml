@@ -1,0 +1,57 @@
+name: Cloud Staging Deployment
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_CLOUD_PROJECT_ID }}
+  TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  TURBO_TEAM: ${{ secrets.VERCEL_ORG_ID }}
+  DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+  DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
+  TRIGGER_SECRET_KEY: ${{ secrets.STAGING_TRIGGER_SECRET_KEY }}
+on:
+  push:
+    branches:
+      - develop
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            prisma:
+              - 'packages/database/**'
+            jobs:
+              - 'packages/jobs/**'
+            application:
+              - 'apps/cloud/**'
+              - 'packages/ui/**'
+              - 'packages/jobs/**'
+              - 'packages/database/**'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.7.1
+      - if: steps.changes.outputs.application == 'true'
+        name: 🔧 Install dependencies
+        run: pnpm i
+      - if: steps.changes.outputs.application == 'true'
+        name: 📤 Pull Vercel Environment Information
+        run: pnpm dlx vercel env pull .env --yes --environment=staging --token=${{ secrets.VERCEL_TOKEN }}
+      - if: steps.changes.outputs.application == 'true'
+        name: 📤 Pull Vercel Environment Information
+        run: pnpm dlx vercel pull --yes --environment=staging --token=${{ secrets.VERCEL_TOKEN }}
+      - if: steps.changes.outputs.prisma == 'true'
+        name: 🤝 Push database
+        run: pnpm db:push
+      # - if: steps.changes.outputs.jobs == 'true'
+      #   name: 🚀 Deploy jobs
+      #   env:
+      #     TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
+      #   run: pnpm jobs:deploy-staging --filter @repo/jobs
+      - if: steps.changes.outputs.application == 'true'
+        name: 🏗 Build Project Artifacts
+        run: pnpm dlx vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      - if: steps.changes.outputs.application == 'true'
+        name: Deploy Project Artifacts to Vercel
+        run: pnpm dlx vercel deploy --target=staging --archive=tgz --token=${{ secrets.VERCEL_TOKEN }}

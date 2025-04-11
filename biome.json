@@ -1,0 +1,42 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "extends": ["ultracite"],
+  "javascript": {
+    "globals": ["Liveblocks"]
+  },
+  "linter": {
+    "rules": {
+      "a11y": {
+        "useSemanticElements": "off"
+      },
+      "style": {
+        "useSingleCaseStatement": "off",
+        "noNegationElse": "off",
+        "useCollapsedElseIf": "off"
+      },
+      "complexity": {
+        "useLiteralKeys": "off",
+        "noExcessiveCognitiveComplexity": "off",
+        "noForEach": "off"
+      },
+      "correctness": {
+        "useExhaustiveDependencies": "off"
+      },
+      "nursery": {
+        "noEnum": "off",
+        "noNestedTernary": "off"
+      }
+    }
+  },
+  "files": {
+    "ignore": [
+      "apps/cloud/src/routeTree.gen.ts",
+      "packages/design-system/components/ui/**",
+      "packages/design-system/lib/**",
+      "packages/design-system/hooks/**",
+      "apps/docs/**/*.json",
+      "apps/email/.react-email/**",
+      "packages/scripts/**"
+    ]
+  }
+}
